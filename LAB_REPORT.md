@@ -20,33 +20,59 @@ Commit of the starter, before any change: 520b629
 Output of the second run, for `staff` and `quit`:
 
 ```text
-
+> staff
+Free lockers: 3
+> quit
 ```
 
 State in one sentence where you think the parcels of the first run were kept.
+<br>ANS: The parcels were kept in the computer's memory.
 
 0.5 The line of Main that you would change to keep the parcels somewhere else:
 
 ```java
-
+ParcelRepository repository = new H2ParcelRepository("./data/parcelpoint");
 ```
 
-0.6 Commit of the switch to H2:
+0.6 Commit of the switch to H2: 0d5a7e9
 
 0.7 Output of `SELECT * FROM PARCEL;` after you stored two parcels:
 
 ```text
-
+CODE  | STUDENT_ID | PARCEL_SIZE | STATUS | LOCKER_NUMBER
+P1001 | S1001      | SMALL       | STORED | 1
+P1002 | S1002      | LARGE       | STORED | 3
+(2 rows, 1 ms)
 ```
 
 0.8 Explain why ParcelPoint could not start while the H2 Shell was open, and identify the class that wrote the message `Cannot create the PARCEL table`.
+<br>ANS : The H2 Shell had already opened and locked the database making ParcelPoint cannot access the same database. And for the class that worte the message is H2ParcelRepository. <br>
 
 0.9 Explain why `staff` shows no parcel while `find` shows each one, and why all three lockers look free.
+<br> ANS: `find` implements findByCode(), which can retrieve data directly from H2 database. While, `staff` uses findAll(), which has not been implemented yet. All tree lockers look free because the parcel data has not been loaded from the database.
 
 0.11 Your findAll method:
 
 ```java
+@Override
+public List<Parcel> findAll() {
+    List<Parcel> parcels = new ArrayList<>();
+    String sql = "SELECT * FROM PARCEL ORDER BY CODE";
 
+    try (Connection connection = connect();
+         PreparedStatement statement = connection.prepareStatement(sql);
+         ResultSet rows = statement.executeQuery()) {
+
+        while (rows.next()) {
+            parcels.add(toParcel(rows));
+        }
+
+    } catch (SQLException e) {
+        throw new IllegalStateException("Cannot read the parcels", e);
+    }
+
+    return parcels;
+}
 ```
 
 Commit that adds findAll:
